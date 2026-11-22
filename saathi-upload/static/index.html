@@ -1,0 +1,318 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Saathi</title>
+<style>
+  :root { --green:#008069; --green-d:#075e54; --bg:#efeae2; --me:#d9fdd3; --bot:#fff; --ink:#111b21; --muted:#667781; --line:#e3e7eb; }
+  * { box-sizing:border-box; }
+  html,body { margin:0; height:100%; font-family: system-ui, -apple-system, "Noto Sans", "Noto Sans Devanagari", sans-serif; background:#d1d7db; color:var(--ink); }
+  .stage { height:100%; display:flex; justify-content:center; gap:20px; padding:0; }
+  .phone { width:100%; max-width:440px; height:100%; display:flex; flex-direction:column; background:var(--bg); box-shadow:0 0 30px rgba(0,0,0,.15); position:relative; }
+  /* WhatsApp header */
+  header { background:var(--green-d); color:#fff; padding:10px 12px; display:flex; align-items:center; gap:10px; }
+  .back { font-size:20px; opacity:.9; }
+  .avatar { width:40px; height:40px; border-radius:50%; background:#fff; color:var(--green-d); display:grid; place-items:center; font-weight:800; font-size:18px; flex:none; }
+  header .t { flex:1; min-width:0; } header .t b { font-size:17px; display:flex; align-items:center; gap:4px; } header .t span { font-size:12px; opacity:.85; }
+  .tick { display:inline-grid; place-items:center; width:15px; height:15px; border-radius:50%; background:#25d366; color:#fff; font-size:10px; }
+  .hicon { background:none; border:0; color:#fff; font-size:20px; cursor:pointer; padding:6px; }
+  #log { flex:1; overflow-y:auto; padding:12px 10px; display:flex; flex-direction:column; gap:6px; }
+  .day { align-self:center; background:#fff; color:var(--muted); font-size:12px; padding:4px 10px; border-radius:8px; box-shadow:0 1px 1px rgba(0,0,0,.06); margin:4px 0; }
+  .msg { max-width:82%; padding:7px 9px 5px; border-radius:8px; font-size:18px; line-height:1.4; box-shadow:0 1px 1px rgba(0,0,0,.1); white-space:pre-wrap; position:relative; }
+  .me { align-self:flex-end; background:var(--me); border-top-right-radius:0; }
+  .bot { align-self:flex-start; background:var(--bot); border-top-left-radius:0; }
+  .msg img { max-width:100%; border-radius:6px; display:block; margin-bottom:4px; }
+  .msg .time { font-size:11px; color:var(--muted); text-align:right; margin-top:2px; }
+  .msg .tr { font-size:13px; color:var(--muted); margin-top:4px; border-top:1px solid rgba(0,0,0,.06); padding-top:4px; white-space:normal; }
+  /* voice note */
+  .vn { display:flex; align-items:center; gap:8px; min-width:230px; }
+  .vn .pb { width:34px; height:34px; border-radius:50%; border:0; background:none; font-size:22px; cursor:pointer; color:#54656f; flex:none; }
+  .vn .wave { flex:1; height:26px; display:flex; align-items:center; gap:2px; }
+  .vn .wave i { display:block; width:3px; border-radius:2px; background:#b7c0c6; }
+  .vn .wave i.on { background:#34b7f1; }
+  .vn .av2 { width:34px; height:34px; border-radius:50%; background:var(--green-d); color:#fff; display:grid; place-items:center; font-size:13px; font-weight:700; flex:none; position:relative; }
+  .vn .av2::after { content:"🎤"; position:absolute; right:-4px; bottom:-4px; font-size:12px; }
+  .vn .dur { font-size:11px; color:var(--muted); }
+  .typing { align-self:flex-start; background:#fff; border-radius:8px; padding:6px 12px; color:var(--muted); font-size:14px; box-shadow:0 1px 1px rgba(0,0,0,.1); }
+  footer { display:flex; gap:6px; padding:6px; align-items:center; background:transparent; }
+  .bar { flex:1; display:flex; align-items:center; background:#fff; border-radius:24px; padding:0 6px; min-width:0; }
+  #text { flex:1; font-size:18px; padding:11px 6px; border:0; outline:none; min-width:0; background:transparent; }
+  #attach { background:none; border:0; font-size:22px; cursor:pointer; color:#54656f; padding:6px; }
+  .round { width:50px; height:50px; border-radius:50%; border:0; font-size:22px; cursor:pointer; flex:none; background:var(--green); color:#fff; }
+  #mic.rec { background:#d93025; animation:pulse 1s infinite; }
+  @keyframes pulse { 50% { transform:scale(1.08); } }
+  #preview { display:none; padding:6px 10px; background:#f0f2f5; font-size:14px; align-items:center; gap:8px; }
+  #preview img { height:48px; border-radius:6px; }
+  #recbar { display:none; text-align:center; color:#d93025; font-size:14px; padding:2px; }
+  /* WhatsApp call screen */
+  #call { display:none; position:absolute; inset:0; flex-direction:column; align-items:center; justify-content:space-between; background:linear-gradient(#0b3d36,#075e54); color:#fff; padding:40px 20px 30px; text-align:center; z-index:5; }
+  #call .who { display:flex; flex-direction:column; align-items:center; gap:10px; }
+  #call .bigav { width:110px; height:110px; border-radius:50%; background:#fff; color:var(--green-d); display:grid; place-items:center; font-size:44px; font-weight:800; }
+  #call .lbl { font-size:13px; opacity:.8; } #call .nm { font-size:26px; font-weight:700; } #timer { font-size:15px; opacity:.85; }
+  #callStatus { font-size:19px; min-height:90px; max-width:380px; line-height:1.4; }
+  .cbtns { display:flex; gap:40px; align-items:center; }
+  .cbtn { width:72px; height:72px; border-radius:50%; border:0; font-size:30px; cursor:pointer; background:rgba(255,255,255,.18); color:#fff; }
+  .cbtn.rec { background:#fff; color:#d93025; animation:pulse 1s infinite; }
+  .cbtn.end { background:#e53935; }
+  .chint { font-size:13px; opacity:.75; margin-top:6px; }
+  /* behind-the-scenes panel (not part of WhatsApp) */
+  .side { width:340px; height:100%; overflow-y:auto; padding:16px 0; display:flex; flex-direction:column; gap:12px; }
+  @media (max-width: 860px) { .side { display:none; } }
+  .panel { background:#fff; border-radius:14px; padding:12px 14px; border:1px solid var(--line); }
+  .panel h3 { margin:0 0 8px; font-size:12px; text-transform:uppercase; letter-spacing:.05em; color:var(--muted); }
+  .panel select, .panel button, .panel a { font-size:14px; }
+  .ctl { display:flex; flex-direction:column; gap:8px; }
+  .ctl a, .ctl button { display:block; text-align:center; padding:8px; border-radius:8px; border:1px solid var(--line); background:#f6f7f9; color:var(--ink); text-decoration:none; cursor:pointer; }
+  .ctl a.primary { background:var(--green-d); color:#fff; border-color:var(--green-d); }
+  #acts .a { border-left:4px solid #9aa5b1; padding:6px 8px; margin-bottom:6px; font-size:13px; background:#f6f7f9; border-radius:6px; }
+  #acts .a b { display:block; font-size:13px; }
+  #acts .a.scam { border-color:#d93025; background:#fdecea; } #acts .a.family { border-color:#8e24aa; background:#f3e5f5; }
+  #acts .a.urgent { border-color:#d93025; background:#fdecea; } #acts .a.logged { border-color:#1a73e8; background:#eef3fd; }
+  #acts .empty { color:var(--muted); font-size:13px; }
+  .note { font-size:11px; color:var(--muted); line-height:1.4; }
+</style>
+</head>
+<body>
+<div class="stage">
+<div class="phone">
+  <header>
+    <span class="back">←</span>
+    <div class="avatar">सा</div>
+    <div class="t"><b>Saathi <span class="tick">✓</span></b><span id="status">online</span></div>
+    <button class="hicon" id="callStart" title="WhatsApp voice call">📞</button>
+    <button class="hicon" title="More">⋮</button>
+  </header>
+
+  <div id="log"><div class="day">TODAY</div></div>
+
+  <div id="call">
+    <div class="who">
+      <div class="lbl">🔒 WhatsApp voice call</div>
+      <div class="bigav">सा</div>
+      <div class="nm">Saathi</div>
+      <div id="timer">00:00</div>
+    </div>
+    <div id="callStatus">बोलने के लिए 🎤 दबाइए</div>
+    <div>
+      <div class="cbtns">
+        <button class="cbtn" id="callBtn" title="Speak">🎤</button>
+        <button class="cbtn end" id="callEnd" title="End call">📵</button>
+      </div>
+      <div class="chint">Demo: tap 🎤, speak, tap again when done</div>
+    </div>
+  </div>
+
+  <div id="preview"><img id="pimg" alt=""><span>Photo attached</span><button onclick="clearImage()">✕</button></div>
+  <div id="recbar">● Recording… tap 🎤 again to send</div>
+  <footer>
+    <div class="bar">
+      <button id="attach" title="Attach photo">📎</button>
+      <input type="file" id="file" accept="image/*" hidden>
+      <input id="text" placeholder="Message" autocomplete="off">
+    </div>
+    <button class="round" id="send" title="Send" style="display:none">➤</button>
+    <button class="round" id="mic" title="Voice note">🎤</button>
+  </footer>
+</div>
+
+<aside class="side">
+  <div class="panel">
+    <h3>Demo controls</h3>
+    <div class="ctl">
+      <label style="font-size:13px;color:#667781">Maa's language
+        <select id="lang" aria-label="Language" style="width:100%;margin-top:4px;padding:6px;border-radius:8px">
+          <option value="hi-IN">हिन्दी (Hindi)</option>
+          <option value="kn-IN">ಕನ್ನಡ (Kannada)</option>
+          <option value="ta-IN">தமிழ் (Tamil)</option>
+          <option value="te-IN">తెలుగు (Telugu)</option>
+          <option value="mr-IN">मराठी (Marathi)</option>
+          <option value="bn-IN">বাংলা (Bengali)</option>
+          <option value="en-IN">English</option>
+        </select>
+      </label>
+      <a class="primary" href="/family" target="_blank">Open Arjun's WhatsApp ↗</a>
+      <button onclick="resetDemo()">Reset demo</button>
+    </div>
+  </div>
+  <div class="panel">
+    <h3>Behind the scenes · not shown to Maa</h3>
+    <div id="acts"><div class="empty">What Saathi does (diary entries, messages to Arjun, scam checks) appears here.</div></div>
+  </div>
+  <div class="panel note">
+    <b>How this maps to real WhatsApp:</b> Saathi is a WhatsApp Business number. Maa sends text, photos or voice notes. Saathi replies with a text message, and with a voice note when she spoke (she taps ▶ to listen). The 📞 button is a WhatsApp Business voice call; the same agent can sit behind a regular phone number.<br><br>
+    <b>Mocked:</b> this web page stands in for WhatsApp; the health history is sample data; the demo clock starts at 7:40 AM.
+  </div>
+</aside>
+</div>
+
+<script>
+const $ = s => document.querySelector(s);
+const log = $('#log');
+let image = null, recorder = null, chunks = [], callPlayer = new Audio(), playing = null;
+
+const greet = {
+  'hi-IN':'सुप्रभात शांता जी! 🙏 आज आप कैसा महसूस कर रही हैं? कुछ भी पूछना हो तो लिखिए या 🎤 दबाकर voice note भेजिए।',
+  'kn-IN':'ಶುಭೋದಯ ಶಾಂತಮ್ಮ! 🙏 ಇವತ್ತು ಹೇಗಿದ್ದೀರಾ? ಏನಾದ್ರೂ ಕೇಳಬೇಕಾದ್ರೆ ಬರೆಯಿರಿ ಅಥವಾ 🎤 ಒತ್ತಿ voice note ಕಳಿಸಿ.',
+  'en-IN':'Good morning Shanta ji! 🙏 How are you feeling today? Type, or tap 🎤 to send a voice note.'
+};
+const esc = s => String(s||'').replace(/[&<>"]/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[m]));
+let clockOffset = 0;  // the demo story runs on the server's demo clock (starts 7:40 AM)
+fetch('/api/clock').then(r => r.json()).then(c => { clockOffset = c.ms - Date.now(); document.querySelectorAll('.msg .time').forEach(t => { t.textContent = t.textContent.replace(/^[^✓]+/, hhmm() + ' '); }); }).catch(() => {});
+const hhmm = () => new Date(Date.now() + clockOffset).toLocaleTimeString([], {hour:'numeric', minute:'2-digit'});
+const scrollDown = () => { log.scrollTop = log.scrollHeight; };
+
+function addMsg(text, who, img) {
+  const d = document.createElement('div'); d.className = 'msg ' + who;
+  if (img) { const i = document.createElement('img'); i.src = img; d.appendChild(i); }
+  if (text) d.appendChild(document.createTextNode(text));
+  const t = document.createElement('div'); t.className = 'time'; t.textContent = hhmm() + (who === 'me' ? ' ✓✓' : ''); d.appendChild(t);
+  log.appendChild(d); scrollDown(); return d;
+}
+
+// WhatsApp-style voice note bubble. src: audio URL. Returns {el, setTranscript}
+function addVoiceNote(src, who) {
+  const d = document.createElement('div'); d.className = 'msg ' + who;
+  const bars = Array.from({length: 28}, (_, i) => `<i style="height:${6 + Math.round(Math.abs(Math.sin(i * 1.7 + src.length)) * 18)}px"></i>`).join('');
+  d.innerHTML = `<div class="vn">${who === 'bot' ? '<div class="av2">सा</div>' : ''}<button class="pb">▶</button><div><div class="wave">${bars}</div><div class="dur">0:00</div></div>${who === 'me' ? '<div class="av2" style="background:#cfd8dc;color:#455">शा</div>' : ''}</div><div class="time">${hhmm()}${who === 'me' ? ' ✓✓' : ''}</div>`;
+  const audio = new Audio(src), pb = d.querySelector('.pb'), dur = d.querySelector('.dur'), is = d.querySelectorAll('.wave i');
+  const fmt = s => isFinite(s) ? Math.floor(s / 60) + ':' + String(Math.floor(s % 60)).padStart(2, '0') : '0:00';
+  audio.addEventListener('loadedmetadata', () => { dur.textContent = fmt(audio.duration); });
+  audio.addEventListener('timeupdate', () => {
+    const p = audio.duration ? audio.currentTime / audio.duration : 0;
+    is.forEach((b, i) => b.classList.toggle('on', i / is.length < p)); dur.textContent = fmt(audio.currentTime);
+  });
+  audio.addEventListener('ended', () => { pb.textContent = '▶'; is.forEach(b => b.classList.remove('on')); dur.textContent = fmt(audio.duration); });
+  pb.onclick = () => {
+    if (!audio.paused) { audio.pause(); pb.textContent = '▶'; return; }
+    if (playing && playing !== audio) playing.pause();
+    playing = audio; audio.play(); pb.textContent = '❚❚';
+  };
+  log.appendChild(d); scrollDown();
+  return { el: d, setTranscript(t) { const tr = document.createElement('div'); tr.className = 'tr'; tr.textContent = t; d.insertBefore(tr, d.querySelector('.time')); scrollDown(); } };
+}
+
+function addActions(cards) {
+  if (!cards || !cards.length) return;
+  const box = $('#acts'); const empty = box.querySelector('.empty'); if (empty) empty.remove();
+  cards.forEach(c => {
+    const d = document.createElement('div');
+    if (c.type === 'scam') { d.className = 'a scam'; d.innerHTML = `<b>🛡️ Scam check: ${esc(c.verdict).toUpperCase()} · risk ${c.risk}/100</b>${esc(c.summary)}<br><i>${esc(c.reasons)}</i>`; }
+    else if (c.type === 'logged') { d.className = 'a logged'; d.innerHTML = `<b>📝 Health diary · ${esc(c.kind)}</b>${esc(c.summary)}`; }
+    else if (c.type === 'family') { d.className = 'a family' + (c.level === 'urgent' ? ' urgent' : ''); d.innerHTML = `<b>${c.level === 'urgent' ? '🚨' : '📲'} WhatsApp to Arjun (${esc(c.level)}) · ${esc(c.title)}</b>${esc(c.message)}`; }
+    box.prepend(d);
+  });
+}
+
+function typing(on) {
+  $('#status').textContent = on ? 'typing…' : 'online';
+  let t = $('#typing');
+  if (on && !t) { t = document.createElement('div'); t.id = 'typing'; t.className = 'typing'; t.textContent = '•••'; log.appendChild(t); scrollDown(); }
+  if (!on && t) t.remove();
+}
+async function postJSON(url, body) {
+  const res = await fetch(url, {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(body)});
+  return res.ok ? res.json() : {error: 'Something went wrong (' + res.status + ')'};
+}
+async function ttsUrl(text) {
+  const r = await postJSON('/api/tts', {text, lang: $('#lang').value});
+  return r.audio ? 'data:audio/mpeg;base64,' + r.audio : null;
+}
+const inCall = () => document.body.classList.contains('callmode');
+
+// Saathi's reply: text message always; plus a voice note if Maa spoke (chat), or spoken aloud (call)
+async function handle(r, spoke) {
+  typing(false);
+  addActions(r.cards);
+  if (r.error) { addMsg('⚠️ ' + r.error, 'bot'); return; }
+  if (inCall()) {
+    $('#callStatus').textContent = r.reply;
+    const url = await ttsUrl(r.reply); if (url) { callPlayer.src = url; callPlayer.play().catch(()=>{}); }
+    addMsg(r.reply, 'bot');
+    return;
+  }
+  addMsg(r.reply, 'bot');
+  if (spoke) {
+    $('#status').textContent = 'recording audio…';
+    const url = await ttsUrl(r.reply);
+    $('#status').textContent = 'online';
+    if (url) addVoiceNote(url, 'bot');
+  }
+}
+
+// text
+$('#text').addEventListener('input', () => { const has = $('#text').value.trim() || image; $('#send').style.display = has ? '' : 'none'; $('#mic').style.display = has ? 'none' : ''; });
+$('#text').addEventListener('keydown', e => { if (e.key === 'Enter') sendText(); });
+$('#send').onclick = sendText;
+async function sendText() {
+  const text = $('#text').value.trim(); if (!text && !image) return;
+  addMsg(text, 'me', image); const img = image;
+  $('#text').value = ''; clearImage(); typing(true);
+  handle(await postJSON('/api/chat', {text, image: img, lang: $('#lang').value}), false);
+}
+
+// photo
+$('#attach').onclick = () => $('#file').click();
+$('#file').onchange = e => {
+  const f = e.target.files[0]; if (!f) return;
+  const r = new FileReader(); r.onload = () => { image = r.result; $('#pimg').src = image; $('#preview').style.display = 'flex'; $('#text').dispatchEvent(new Event('input')); }; r.readAsDataURL(f);
+};
+function clearImage() { image = null; $('#preview').style.display = 'none'; $('#file').value = ''; $('#text').dispatchEvent(new Event('input')); }
+
+// voice note / call speech
+async function toggleRec(btn) {
+  if (recorder && recorder.state === 'recording') { recorder.stop(); return; }
+  if (playing) playing.pause(); callPlayer.pause();
+  let stream;
+  try { stream = await navigator.mediaDevices.getUserMedia({audio:true}); }
+  catch (e) { alert('Please allow the microphone.'); return; }
+  chunks = []; recorder = new MediaRecorder(stream);
+  recorder.ondataavailable = e => chunks.push(e.data);
+  recorder.onstop = async () => {
+    stream.getTracks().forEach(t => t.stop());
+    document.querySelectorAll('.rec').forEach(b => b.classList.remove('rec')); $('#recbar').style.display = 'none';
+    const blob = new Blob(chunks, {type: recorder.mimeType || 'audio/webm'});
+    const ext = (recorder.mimeType || '').includes('mp4') ? 'mp4' : 'webm';
+    const call = inCall();
+    const note = call ? null : addVoiceNote(URL.createObjectURL(blob), 'me');
+    const img = image; clearImage(); typing(true);
+    if (call) $('#callStatus').textContent = '…';
+    const fd = new FormData(); fd.append('audio', blob, 'voice.' + ext); fd.append('lang', $('#lang').value);
+    if (img) fd.append('image', img);
+    const res = await fetch('/api/voice', {method:'POST', body: fd});
+    const r = res.ok ? await res.json() : {error: 'Something went wrong (' + res.status + ')'};
+    if (r.transcript) { if (note) note.setTranscript(r.transcript); else addMsg('📞 ' + r.transcript, 'me'); }
+    handle(r, true);
+  };
+  recorder.start(); btn.classList.add('rec');
+  if (inCall()) $('#callStatus').textContent = 'सुन रही हूँ… बोलकर फिर 🎤 दबाइए'; else $('#recbar').style.display = 'block';
+}
+$('#mic').onclick = () => toggleRec($('#mic'));
+$('#callBtn').onclick = () => toggleRec($('#callBtn'));
+
+// WhatsApp voice call
+let timerId = null;
+$('#callStart').onclick = () => {
+  document.body.classList.add('callmode'); $('#call').style.display = 'flex';
+  $('#callStatus').textContent = 'नमस्ते शांता जी, बोलिए, मैं सुन रही हूँ।';
+  const t0 = Date.now(); clearInterval(timerId);
+  timerId = setInterval(() => { const s = Math.floor((Date.now() - t0) / 1000); $('#timer').textContent = String(Math.floor(s / 60)).padStart(2, '0') + ':' + String(s % 60).padStart(2, '0'); }, 1000);
+  addMsg('📞 Voice call started', 'me');
+};
+$('#callEnd').onclick = () => {
+  document.body.classList.remove('callmode'); $('#call').style.display = 'none'; clearInterval(timerId); callPlayer.pause();
+  addMsg('📞 Voice call · ' + $('#timer').textContent, 'bot');
+};
+
+async function resetDemo() {
+  if (!confirm('Reset demo data?')) return;
+  await fetch('/api/reset', {method:'POST'}); location.reload();
+}
+
+// language
+try { const saved = localStorage.getItem('saathi-lang-v2'); if (saved) $('#lang').value = saved; } catch (e) {}
+$('#lang').onchange = () => { try { localStorage.setItem('saathi-lang-v2', $('#lang').value); } catch (e) {} };
+addMsg(greet[$('#lang').value] || greet['en-IN'], 'bot');
+</script>
+</body>
+</html>
