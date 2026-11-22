@@ -569,7 +569,7 @@ def chat():
     text = (body.get("text") or "").strip()
     image = body.get("image")
     content = [image_block(image)] if image and image.startswith("data:") else []
-    content.append({"type": "text", "text": text or "Is this real? What should I do?"})
+    content.append({"type": "text", "text": text or "(She sent this photo without any text. Look at it carefully, work out what it is, and tell her what to do about it.)"})
     reply, cards = ask_saathi(content, lang, "chat")
     return jsonify({"reply": reply, "cards": cards})
 
