@@ -1,0 +1,143 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Saathi Family</title>
+<style>
+  :root { --ink:#1b1f23; --muted:#5f6b76; --line:#e3e7eb; --bg:#f6f7f9; --card:#fff; --green:#075e48; --wa:#ece5dd; }
+  * { box-sizing:border-box; }
+  body { margin:0; font-family: system-ui, -apple-system, "Noto Sans", sans-serif; background:var(--bg); color:var(--ink); }
+  .wrap { max-width:1150px; margin:0 auto; padding:16px; display:grid; gap:16px; grid-template-columns: 420px 1fr; align-items:start; }
+  @media (max-width: 860px) { .wrap { grid-template-columns: 1fr; } }
+  /* WhatsApp-like chat */
+  .wa { background:var(--wa); border-radius:16px; overflow:hidden; border:1px solid var(--line); display:flex; flex-direction:column; height:calc(100vh - 32px); min-height:520px; }
+  .wa header { background:var(--green); color:#fff; padding:12px 14px; display:flex; gap:10px; align-items:center; }
+  .wa .av { width:42px; height:42px; border-radius:50%; background:#fff; color:var(--green); display:grid; place-items:center; font-weight:800; }
+  .wa header b { display:block; font-size:17px; } .wa header span { font-size:12px; opacity:.85; }
+  .wa .call { margin-left:auto; background:rgba(255,255,255,.15); color:#fff; border:0; border-radius:20px; padding:8px 12px; font-size:14px; cursor:pointer; }
+  #feed { flex:1; overflow-y:auto; padding:14px 12px; display:flex; flex-direction:column; gap:8px; }
+  .b { align-self:flex-start; max-width:92%; background:#fff; border-radius:10px; border-top-left-radius:2px; padding:8px 10px 6px; font-size:15px; line-height:1.4; box-shadow:0 1px 1px rgba(0,0,0,.08); border-left:5px solid #c9d1d9; }
+  .b.urgent { border-left-color:#d93025; background:#fff5f4; } .b.attention { border-left-color:#f29900; } .b.info { border-left-color:#34a853; }
+  .b .t { font-weight:700; margin-bottom:2px; } .b .m { color:var(--muted); font-size:11px; text-align:right; margin-top:4px; }
+  .b.arjun { align-self:flex-end; background:#d9fdd3; border-left:0; border-top-left-radius:10px; border-top-right-radius:2px; }
+  .b.reply { border-left-color:#075e48; }
+  .typing { align-self:flex-start; color:var(--muted); font-style:italic; font-size:14px; }
+  .reply .att { background:#fff; color:#445; font-size:18px; }
+  #fprev { display:none; padding:4px 10px; background:#f0f2f5; font-size:13px; align-items:center; gap:8px; } #fprev img { height:40px; border-radius:6px; }
+  .b.new { animation: pop .6s ease-out; } @keyframes pop { from { transform:scale(.96); background:#fff3c4; } }
+  .day { align-self:center; background:#e1f2fb; color:#456; font-size:12px; padding:3px 10px; border-radius:8px; }
+  .reply { display:flex; gap:8px; padding:8px; background:#f0f2f5; }
+  .reply input { flex:1; border-radius:20px; border:1px solid #ccc; padding:10px 14px; font-size:15px; } .reply button { border:0; background:var(--green); color:#fff; border-radius:20px; padding:0 14px; }
+  /* record */
+  .rec h1 { margin:4px 0 2px; font-size:22px; } .rec .sub { color:var(--muted); font-size:14px; margin-bottom:12px; }
+  .grid { display:grid; gap:12px; grid-template-columns: 1fr 1fr; } @media (max-width: 600px) { .grid { grid-template-columns: 1fr; } }
+  section { background:var(--card); border:1px solid var(--line); border-radius:14px; padding:12px 14px; }
+  section.wide { grid-column: 1 / -1; }
+  h2 { margin:0 0 8px; font-size:13px; text-transform:uppercase; letter-spacing:.05em; color:var(--muted); }
+  .item { padding:8px 0; border-top:1px solid var(--line); font-size:14px; } .item:first-of-type { border-top:0; }
+  .item .meta { color:var(--muted); font-size:12px; margin-top:2px; }
+  .tag { display:inline-block; font-size:11px; font-weight:700; padding:1px 7px; border-radius:10px; background:#eef1f4; color:#445; margin-right:6px; text-transform:uppercase; }
+  .tag.symptom { background:#fdecea; color:#b3261e; } .tag.reading { background:#e8f0fe; color:#1a56c4; } .tag.scam { background:#fdecea; color:#b3261e; }
+  .empty { color:var(--muted); font-size:14px; }
+  .top { display:flex; justify-content:space-between; align-items:center; }
+  button.reset { font-size:12px; border:1px solid var(--line); background:#fff; border-radius:8px; padding:4px 8px; cursor:pointer; color:var(--muted); }
+  .mocked { font-size:11px; color:var(--muted); margin-top:10px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="wa">
+    <header>
+      <div class="av">सा</div>
+      <div><b>Saathi · Maa 💚</b><span>Arjun's WhatsApp · chat with Saathi about Maa</span></div>
+      <button class="call" onclick="alert('Calling Maa… (mocked)')">📞 Call Maa</button>
+    </header>
+    <div id="feed"></div>
+    <div id="fprev"><img id="fpimg" alt=""><span>Report attached</span><button onclick="clearF()">✕</button></div>
+    <div class="reply"><button class="att" onclick="document.getElementById('ffile').click()" title="Attach report photo">📎</button><input type="file" id="ffile" accept="image/*" hidden>
+      <input id="ftext" placeholder="Ask about Maa, or update her record…" autocomplete="off"><button id="fsend">➤</button></div>
+  </div>
+
+  <div class="rec">
+    <div class="top">
+      <div><h1>Maa's health record</h1><div class="sub">Shanta Sharma · 68 · Lucknow · kept up to date by Arjun and Saathi</div></div>
+      <button class="reset" onclick="resetDemo()">reset demo</button>
+    </div>
+    <div class="grid">
+      <section class="wide"><h2>📝 Today's diary</h2><div id="today"></div></section>
+      <section><h2>📅 Coming up</h2><div id="upcoming"></div></section>
+      <section><h2>💊 Medicines</h2><div id="meds"></div></section>
+      <section class="wide"><h2>🗂️ History Saathi remembers</h2><div id="history"></div></section>
+      <section><h2>💰 Money · SBI + Google Pay (read-only)</h2><div id="money"></div></section>
+      <section><h2>💊 Medicine checks</h2><div id="medchecks"></div></section>
+      <section class="wide"><h2>🛡️ Scams blocked</h2><div id="alerts"></div></section>
+    </div>
+    <div class="mocked">Mocked for demo: health history is sample data (in the product, Arjun forwards reports/PDFs on WhatsApp and Saathi reads them); this page stands in for Arjun's WhatsApp.</div>
+  </div>
+</div>
+<script>
+const esc = s => String(s||'').replace(/[&<>"]/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[m]));
+const lvlIcon = {urgent:'🚨', attention:'🟠', info:'🟢'};
+let seenFeed = null;
+async function refresh() {
+  const d = await (await fetch('/api/state')).json();
+  // feed: stored newest-first; show oldest-first like a chat
+  const items = d.feed.slice().reverse();
+  const nNew = seenFeed === null ? 0 : d.feed.length - seenFeed; seenFeed = d.feed.length;
+  let html = '', shownToday = false, shownYest = false;
+  items.forEach((f, i) => {
+    if (f.time.startsWith('Yesterday') && !shownYest) { html += '<div class="day">YESTERDAY</div>'; shownYest = true; }
+    if (f.time.startsWith('Today') && !shownToday) { html += '<div class="day">TODAY</div>'; shownToday = true; }
+    const isNew = i >= items.length - nNew;
+    const head = f.title ? `<div class="t">${lvlIcon[f.level]||''} ${esc(f.title)}</div>` : '';
+    html += `<div class="b ${f.level} ${isNew ? 'new' : ''}">${head}${f.has_image ? '📎 ' : ''}${esc(f.text || f.message).replace(/\n/g,'<br>')}<div class="m">${esc(f.time.replace(/^(Today|Yesterday) /,''))}</div></div>`;
+  });
+  if (pending) html += `<div class="b arjun">${pending.img ? '📎 ' : ''}${esc(pending.text)}</div><div class="typing">Saathi is typing…</div>`;
+  const feed = document.getElementById('feed'); feed.innerHTML = html; if (nNew || pending || nNewForce || !refresh.done) feed.scrollTop = feed.scrollHeight; nNewForce = false; refresh.done = true;
+
+  document.getElementById('today').innerHTML = d.today_log.length ? d.today_log.map(t =>
+    `<div class="item"><span class="tag ${t.kind}">${esc(t.kind)}</span>${esc(t.summary)}<div class="meta">${esc(t.time)}</div></div>`).join('')
+    : '<p class="empty">Nothing yet today.</p>';
+  document.getElementById('upcoming').innerHTML = d.upcoming.map(u =>
+    `<div class="item"><b>${esc(u.title)}</b><div class="meta">${esc(u.when)}${u.prep ? ' · ' + esc(u.prep) : ''}</div></div>`).join('');
+  document.getElementById('meds').innerHTML = d.medicines.map(m =>
+    `<div class="item"><b>${esc(m.name)}</b><div class="meta">${esc(m.when)} · ${esc(m.for)}${m.note ? ' · ' + esc(m.note) : ''}</div></div>`).join('');
+  document.getElementById('history').innerHTML = d.history.slice().reverse().map(h =>
+    `<div class="item"><span class="tag">${esc(h.type)}</span><b>${esc(h.date)}</b><div class="meta">${esc(h.text)}</div></div>`).join('');
+  const fin = d.finance || {recent: [], pending: []};
+  document.getElementById('money').innerHTML = `<div class="item"><b>Balance ${esc(fin.balance)}</b><div class="meta">${esc(fin.guardrail)}</div></div>` +
+    (fin.pending||[]).map(p => `<div class="item"><span class="tag scam">pending</span><b>${esc(p.amount)} collect request</b> from ${esc(p.from)} ("${esc(p.shown_name)}")<div class="meta">${esc(p.note_on_request)} · ${esc(p.received)}</div></div>`).join('') +
+    (fin.recent||[]).slice(0,4).map(t => `<div class="item">${esc(t.what)} <b style="float:right">${esc(t.amount)}</b><div class="meta">${esc(t.date)}</div></div>`).join('');
+  const mc = d.med_checks || [];
+  document.getElementById('medchecks').innerHTML = mc.length ? mc.map(m =>
+    `<div class="item"><span class="tag ${m.match === 'different' ? 'scam' : 'reading'}">${m.match === 'same_medicine' ? 'same' : m.match}</span><b>${esc(m.brand_seen)}</b> = ${esc(m.contains)}<div class="meta">${esc(m.explanation)} · ${esc(m.time)}</div></div>`).join('')
+    : '<p class="empty">No checks today.</p>';
+  document.getElementById('alerts').innerHTML = d.alerts.length ? d.alerts.map(a =>
+    `<div class="item"><span class="tag scam">${esc(a.verdict)} · ${a.risk}</span>${esc(a.summary)}<div class="meta">${esc(a.reasons)} · ${esc(a.time)}</div></div>`).join('')
+    : '<p class="empty">None today.</p>';
+}
+let pending = null, fimg = null;
+async function sendF() {
+  const inp = document.getElementById('ftext'); const text = inp.value.trim();
+  if (!text && !fimg) return;
+  pending = {text: text || 'Sent a report', img: fimg}; const img = fimg; inp.value = ''; clearF(); nNewForce = true; refresh();
+  try {
+    const res = await fetch('/api/family_chat', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({text, image: img})});
+    const r = await res.json(); if (r.error) alert(r.error);
+  } catch (e) { alert('Could not reach Saathi'); }
+  pending = null; refresh();
+}
+let nNewForce = false;
+document.getElementById('fsend').onclick = sendF;
+document.getElementById('ftext').addEventListener('keydown', e => { if (e.key === 'Enter') sendF(); });
+document.getElementById('ffile').onchange = e => {
+  const f = e.target.files[0]; if (!f) return;
+  const r = new FileReader(); r.onload = () => { fimg = r.result; document.getElementById('fpimg').src = fimg; document.getElementById('fprev').style.display = 'flex'; }; r.readAsDataURL(f);
+};
+function clearF() { fimg = null; document.getElementById('fprev').style.display = 'none'; document.getElementById('ffile').value = ''; }
+async function resetDemo() { if (confirm('Reset demo data?')) { await fetch('/api/reset', {method:'POST'}); seenFeed = null; refresh.done = false; refresh(); } }
+refresh(); setInterval(refresh, 2500);
+</script>
+</body>
+</html>
